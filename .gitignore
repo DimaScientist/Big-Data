@@ -1,4 +1,7 @@
 */*.class
 */*.log
 */.idea
-*/target
+**/target
+*/*.iml
+**/project
+**/.bsp
