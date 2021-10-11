@@ -102,4 +102,4 @@ tripsInternal
 
 Результат:
 
-![Пользователи, потратившие на поездки более 3 часов](https://github.com/DimaScientist/Big-Data/blob/main/LabWork1/images/task4.png)
+![Пользователи, потратившие на поездки более 3 часов](https://github.com/DimaScientist/Big-Data/blob/main/LabWork1/images/task5.png)
