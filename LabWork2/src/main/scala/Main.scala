@@ -1,16 +1,14 @@
 package org.example
 
-import breeze.linalg.split
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
-
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import org.apache.spark.sql.functions.lower
 
 
 object Main {
+
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
     Logger.getLogger("org.spark-project").setLevel(Level.WARN)
@@ -26,27 +24,73 @@ object Main {
 
 
     val programLanguagesPath = "./src/resources/programming-languages.csv"
-    val dfProgramLanguages = spark.read.option("header", true).csv(programLanguagesPath)
+
+    var dfProgramLanguages = spark.read.option("header", value = true)
+      .csv(programLanguagesPath)
+    dfProgramLanguages = dfProgramLanguages.withColumn("language", lower(dfProgramLanguages("language")))
+
     println("Выборка данных о языках программирования: ")
-    dfProgramLanguages.show(5)
+    dfProgramLanguages.show(10)
 
     val postsPath = "F:/posts_sample.xml"
 
     val dfPosts = spark.read.format("com.databricks.spark.xml").option("rowTag", "row").load(postsPath)
     println("Выборка данных о постах: ")
-    dfPosts.show(5)
+    dfPosts.show(10)
 
     println("Типы данных в DataFrame, содержащий информацию о постах:")
     dfPosts.printSchema()
 
     import spark.implicits._
 
-    val startYear = 2010
-    val endYear = 2020
+    val startYear = 2008
+    val endYear = 2021
 
-    dfPosts
-      .filter(s"_Tags IS NOT NULL AND _CreationDate BETWEEN '${startYear}' AND '${endYear}'")
-      .show()
+
+    dfPosts.createOrReplaceTempView("posts")
+    dfProgramLanguages.createOrReplaceTempView("languages")
+    
+
+    val tagsBetweenYears = spark.sql(s"" +
+      s"SELECT " +
+      s"_Id AS id, " +
+      s"_Tags AS tags " +
+      s"FROM posts " +
+      s"WHERE _CreationDate BETWEEN '${startYear}' " +
+      s"AND '${endYear}' AND _Tags IS NOT NULL;")
+      .map(
+        row => (
+          row.getLong(0),
+          row.getString(1)
+            .replace("><", " ")
+            .replace(">", "")
+            .replace("<", "")
+        )
+      )
+      .rdd
+      .flatMap(row => row._2.split(" "))
+      .map(tag => (tag, 1))
+      .reduceByKey(_ + _)
+      .toDF("tag", "count_posts")
+
+    tagsBetweenYears.show()
+
+    tagsBetweenYears.createOrReplaceTempView("tags")
+
+    val languagesDF = spark.sql("" +
+      "SELECT " +
+      "tags.tag AS language, " +
+      "tags.count_posts AS count_posts " +
+      "FROM tags " +
+      "WHERE EXISTS (SELECT 1 FROM languages WHERE languages.language LIKE tags.tag || '%')" +
+      "SORT BY tags.count_posts DESC;"
+    )
+
+    languagesDF.show(20)
+
+    languagesDF.write.parquet("languages.parquet")
+
+    spark.read.parquet("languages.parquet").show(10)
 
 
     sc.stop()
