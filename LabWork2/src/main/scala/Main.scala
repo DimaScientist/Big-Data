@@ -49,7 +49,7 @@ object Main {
 
     dfPosts.createOrReplaceTempView("posts")
     dfProgramLanguages.createOrReplaceTempView("languages")
-    
+
 
     val tagsBetweenYears = spark.sql(s"" +
       s"SELECT " +
