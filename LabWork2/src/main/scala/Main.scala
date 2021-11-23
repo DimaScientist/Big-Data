@@ -8,7 +8,6 @@ import org.apache.spark.sql.functions.lower
 
 
 object Main {
-
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
     Logger.getLogger("org.spark-project").setLevel(Level.WARN)
@@ -23,16 +22,16 @@ object Main {
     val spark = SparkSession.builder().appName(appName).config(config).getOrCreate()
 
 
-    val programLanguagesPath = "./src/resources/programming-languages.csv"
+    val programLanguagesPath = "/media/dmitry/Dima/programming-languages.csv"
 
     var dfProgramLanguages = spark.read.option("header", value = true)
       .csv(programLanguagesPath)
-    dfProgramLanguages = dfProgramLanguages.withColumn("language", lower(dfProgramLanguages("language")))
+    dfProgramLanguages = dfProgramLanguages.withColumn("name", lower(dfProgramLanguages("name")))
 
     println("Выборка данных о языках программирования: ")
     dfProgramLanguages.show(10)
 
-    val postsPath = "F:/posts_sample.xml"
+    val postsPath = "/media/dmitry/Dima/posts_sample.xml"
 
     val dfPosts = spark.read.format("com.databricks.spark.xml").option("rowTag", "row").load(postsPath)
     println("Выборка данных о постах: ")
@@ -43,7 +42,7 @@ object Main {
 
     import spark.implicits._
 
-    val startYear = 2008
+    val startYear = 2000
     val endYear = 2021
 
 
@@ -82,11 +81,11 @@ object Main {
       "tags.tag AS language, " +
       "tags.count_posts AS count_posts " +
       "FROM tags " +
-      "WHERE EXISTS (SELECT 1 FROM languages WHERE languages.language LIKE tags.tag || '%')" +
+      "WHERE EXISTS (SELECT 1 FROM languages WHERE languages.name LIKE '%' || tags.tag || '%')" +
       "SORT BY tags.count_posts DESC;"
     )
 
-    languagesDF.show(20)
+    languagesDF.show(10)
 
     languagesDF.write.parquet("languages.parquet")
 
