@@ -42,7 +42,7 @@ object Main {
 
     import spark.implicits._
 
-    val startYear = 2000
+    val startYear = 2010
     val endYear = 2021
 
 
@@ -84,8 +84,6 @@ object Main {
       "WHERE EXISTS (SELECT 1 FROM languages WHERE languages.name LIKE '%' || tags.tag || '%')" +
       "SORT BY tags.count_posts DESC;"
     )
-
-    languagesDF.show(10)
 
     languagesDF.write.parquet("languages.parquet")
 
