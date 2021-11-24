@@ -16,6 +16,7 @@
 Была изучена интерактивная сессия Zookeeper и было изучена работа приложения с барьерной синхронизацией.
 
 Результат работы:
+
 ![Начало](https://github.com/DimaScientist/Big-Data/blob/main/LabWork4/images/animal_start.png)
 
 ![Окончание](https://github.com/DimaScientist/Big-Data/blob/main/LabWork4/images/animal_end.png)
