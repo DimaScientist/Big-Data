@@ -8,6 +8,8 @@ import java.time.format.DateTimeFormatter
 import org.apache.log4j.{Level, Logger}
 import models._
 
+import breeze.numerics.{asin, pow, sin, sqrt}
+
 import java.time.LocalDate
 
 
@@ -19,10 +21,9 @@ object Main {
   def main(args: Array[String]): Unit = {
 
     val appName = "LabWork1"
-    val master = "local[2]"
-
 
     val Seq(masterURL, tripDataPath, stationDataPath) = args.toSeq
+
 //    val config = new SparkConf().setAppName(appName).setMaster(master)
     val config = new SparkConf().setAppName(appName).setMaster(masterURL)
 
@@ -35,7 +36,7 @@ object Main {
 //    val stationData = sc.textFile((new File("./src/resources/stations.csv")).getPath)
 
     val stationHeader = stationData.first()
-    val stations = stationData.filter(row=>row!=stationHeader)
+    val stations = stationData.filter(row=>row!=stationHeader).map(row=>row.split(",", -1))
 
 
     val tripHeader = tripData.first()
@@ -64,7 +65,7 @@ object Main {
     println("\n count: " + endTrips.count())
 
     val tripsInternal = trips.mapPartitions(rows=> {
-      val timeFormat = DateTimeFormatter.ofPattern("yyyy-M-d H:m")
+      val timeFormat = DateTimeFormatter.ofPattern("M/d/yyyy H:m")
       rows.map(row=> Trip(
         tripId = row(0).toInt,
         duration = row(1).toInt,
@@ -94,8 +95,9 @@ object Main {
       notes = null
     ))
 
-    print("\n" + stationsInternal.first + "\n")
+    print("\n" + stationsInternal.first.name + "\n")
     print("\n" + stationsInternal.first.landmark + "\n")
+
 
     println("------------------------------------------------------")
     println("Задача 1: Найти велосипед с максимальным пробегом.")
@@ -120,19 +122,21 @@ object Main {
     println("Задача 2: Найти наибольшее расстояние между станциями.")
     println("------------------------------------------------------")
 
-    val stationsByDuration = tripsInternal
-      .filter(trip => trip.startStation != trip.endStation)
-      .keyBy(trip => (trip.startStation, trip.endStation))
-      .mapValues(trip => trip.duration)
+    val r_earth = 6371
 
-    val durationsAroundStation = stationsByDuration.
-      aggregateByKey((0, 0))(
-        (acc, value) => (acc._1 + value, acc._2 + 1),
-        (acc1, acc2) => (acc1._1 + acc2._1, acc1._2 + acc2._2)).mapValues(acc => acc._1 / acc._2)
-
-    val stationsWithBiggestDuration = durationsAroundStation.map(row => row.swap).top(1)
-    stationsWithBiggestDuration.foreach(println)
-
+   val biggestDistance =  stationsInternal
+     .cartesian(stationsInternal)
+     .map(row =>
+       (
+         (row._1.name, row._2.name),
+         2 * r_earth * asin( sqrt( pow(sin((row._1.lat - row._2.lat) / 2),2)
+           + (1 - pow(sin((row._1.lat - row._2.lat) / 2),2)
+           - pow(sin((row._1.lat + row._2.lat) / 2),2) * pow(sin((row._1.long + row._2.long) / 2),2))))
+       )
+     )
+     .reduce((first, second) => {if(first._2 > second._2) first else second})
+    println(String.format("Станции " +  biggestDistance._1._1 + " и " + biggestDistance._1._2
+      + " имеют расстояние: " + biggestDistance._2))
     println("------------------------------------------------------")
 
     println("------------------------------------------------------")
