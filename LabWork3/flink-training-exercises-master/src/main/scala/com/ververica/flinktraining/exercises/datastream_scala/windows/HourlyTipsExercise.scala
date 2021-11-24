@@ -87,7 +87,6 @@ object HourlyTipsExercise {
     override def process(key: Long, context: Context, elements: Iterable[(Long, Float)], out: Collector[(Long, Long, Float)]): Unit = {
       // сохраняем итератор на следующую сумму
       val sum = elements.iterator.next()._2
-      // запоминаем контекст, ключ и сумму
       out.collect((context.window.getEnd, key, sum))
     }
   }

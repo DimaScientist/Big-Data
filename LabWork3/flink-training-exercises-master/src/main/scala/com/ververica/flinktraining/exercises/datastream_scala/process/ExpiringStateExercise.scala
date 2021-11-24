@@ -85,6 +85,7 @@ object ExpiringStateExercise {
       new ValueStateDescriptor[TaxiFare]("new fare", classOf[TaxiFare])
     )
 
+    // функция вызова обработки для первого потока поездок из двух связанных
     override def processElement1(ride: TaxiRide,
                                  context: KeyedCoProcessFunction[Long, TaxiRide, TaxiFare, (TaxiRide, TaxiFare)]#Context,
                                  out: Collector[(TaxiRide, TaxiFare)]): Unit = {
@@ -95,16 +96,19 @@ object ExpiringStateExercise {
       if(fare != null){
         // если значение не пустое, то текущее состояние очищается и добавляется пара: поездка-плата
         stateFare.clear()
+        // получаем результат
         out.collect((ride, fare))
         context.timerService().deleteEventTimeTimer(ride.getEventTime)
       }
       else{
         // иначе обновляем состояние поездки
         stateRide.update(ride)
+        // запрашиваем метку времени и ожидаем до тех пор, пока не появится watermark
         context.timerService().registerEventTimeTimer(ride.getEventTime)
       }
     }
 
+    // функция вызова обработки для второго потока платы из двух связанных
     override def processElement2(fare: TaxiFare,
                                  context: KeyedCoProcessFunction[Long, TaxiRide, TaxiFare, (TaxiRide, TaxiFare)]#Context,
                                  out: Collector[(TaxiRide, TaxiFare)]): Unit = {
@@ -115,21 +119,24 @@ object ExpiringStateExercise {
       if(ride != null){
         // если значение не пустое, то текущее состояние очищается и добавляется пара: поездка-плата
         stateRide.clear()
+        // получаем результат
         out.collect((ride, fare))
         context.timerService().deleteEventTimeTimer(ride.getEventTime)
       }
       else{
         // иначе обновляем состояние платы
         stateFare.update(fare)
-
+        // запрашиваем метку времени и ожидаем до тех пор, пока не появится watermark
         context.timerService().registerEventTimeTimer(fare.getEventTime)
       }
     }
 
+    // При вызове TimerService
     override def onTimer(timestamp: Long,
                          ctx: KeyedCoProcessFunction[Long, TaxiRide, TaxiFare, (TaxiRide, TaxiFare)]#OnTimerContext,
                          out: Collector[(TaxiRide, TaxiFare)]): Unit = {
       if(stateFare.value()!=null){
+        // отправляем запись на выход по тегу
         ctx.output(unmatchedFares, stateFare.value())
         stateFare.clear()
       }

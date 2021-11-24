@@ -31,7 +31,7 @@ object Main {
     println("Выборка данных о языках программирования: ")
     dfProgramLanguages.show(10)
 
-    val postsPath = "/media/dmitry/Dima/posts_sample.xml"
+    val postsPath = "/media/dmitry/Dima/stackoverflow.com-Posts/Posts.xml"
 
     val dfPosts = spark.read.format("com.databricks.spark.xml").option("rowTag", "row").load(postsPath)
     println("Выборка данных о постах: ")
