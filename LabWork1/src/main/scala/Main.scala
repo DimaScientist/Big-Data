@@ -126,6 +126,7 @@ object Main {
 
    val biggestDistance =  stationsInternal
      .cartesian(stationsInternal)
+     .filter(stations => stations._1.name != stations._2.name)
      .map(row =>
        (
          (row._1.name, row._2.name),

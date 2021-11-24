@@ -33,18 +33,19 @@
 
 2. Найти наибольшее расстояние между станциями.
 
-Производим декартово произведение таблицы stationsInternal на саму себя при помощи ```cartesian```. Для каждой пары станции составляем кортеж: пара имен станций и расстояние, вычисленное по определенной [формуле](https://en.wikipedia.org/wiki/Haversine_formula). После сравниваем пары и выбираем с наибольшим расстоянием.
+Производим декартово произведение таблицы stationsInternal на саму себя при помощи ```cartesian```. Фильтруем пары так, чтобы в паре не было станций с одинаковыми названиями. Для каждой пары станции составляем кортеж: пара имен станций и расстояние, вычисленное по определенной [формуле](https://en.wikipedia.org/wiki/Haversine_formula). После сравниваем пары и выбираем с наибольшим расстоянием.
 
 ```
- val r_earth = 6371
+val r_earth = 6371
 
    val biggestDistance =  stationsInternal
      .cartesian(stationsInternal)
+     .filter(stations => stations._1.name != stations._2.name)
      .map(row =>
        (
-         (row._1.name, row._2.name), 
-         2 * r_earth * asin( sqrt( pow(sin((row._1.lat - row._2.lat) / 2),2) 
-           + (1 - pow(sin((row._1.lat - row._2.lat) / 2),2) 
+         (row._1.name, row._2.name),
+         2 * r_earth * asin( sqrt( pow(sin((row._1.lat - row._2.lat) / 2),2)
+           + (1 - pow(sin((row._1.lat - row._2.lat) / 2),2)
            - pow(sin((row._1.lat + row._2.lat) / 2),2) * pow(sin((row._1.long + row._2.long) / 2),2))))
        )
      )
