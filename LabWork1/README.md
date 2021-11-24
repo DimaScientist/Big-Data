@@ -33,24 +33,22 @@
 
 2. Найти наибольшее расстояние между станциями.
 
-Сначала производим фильтрацию поездок, для которых пункт отбытия и прибытия разные. 
-Выделяем записи, где ключем выступать будет пара (пункт отбытия, пункт прибытия).
-В качестве параметра для обработки будем использовать длительность поездки.
-Пробегаемся по всем записям по путям: от начальной станции до конечной при помощи ```aggregateByKey```, суммируя длительности.
-Производим сортировку по длительности путей.
+Производим декартово произведение таблицы stationsInternal на саму себя при помощи ```cartesian```. Для каждой пары станции составляем кортеж: пара имен станций и расстояние, вычисленное по определенной [формуле](https://en.wikipedia.org/wiki/Haversine_formula). После сравниваем пары и выбираем с наибольшим расстоянием.
 
 ```
-    val stationsByDuration = tripsInternal
-      .filter(trip => trip.startStation != trip.endStation)
-      .keyBy(trip => (trip.startStation, trip.endStation))
-      .mapValues(trip => trip.duration)
+ val r_earth = 6371
 
-    val durationsAroundStation = stationsByDuration.
-      aggregateByKey((0, 0))(
-        (acc, value) => (acc._1 + value, acc._2 + 1),
-        (acc1, acc2) => (acc1._1 + acc2._1, acc1._2 + acc2._2)).mapValues(acc => acc._1 / acc._2)
-
-    val stationsWithBiggestDuration = durationsAroundStation.map(row => row.swap).top(1)
+   val biggestDistance =  stationsInternal
+     .cartesian(stationsInternal)
+     .map(row =>
+       (
+         (row._1.name, row._2.name), 
+         2 * r_earth * asin( sqrt( pow(sin((row._1.lat - row._2.lat) / 2),2) 
+           + (1 - pow(sin((row._1.lat - row._2.lat) / 2),2) 
+           - pow(sin((row._1.lat + row._2.lat) / 2),2) * pow(sin((row._1.long + row._2.long) / 2),2))))
+       )
+     )
+     .reduce((first, second) => {if(first._2 > second._2) first else second})
 ```
 
 Результат:
