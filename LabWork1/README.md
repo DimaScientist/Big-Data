@@ -102,3 +102,18 @@ tripsInternal
 Результат:
 
 ![Пользователи, потратившие на поездки более 3 часов](https://github.com/DimaScientist/Big-Data/blob/main/LabWork1/images/task5.png)
+
+
+## Запуск в кластере
+
+Данный код был запущен на сервере __MapR__.
+
+![Spark](https://github.com/DimaScientist/Big-Data/blob/main/LabWork1/images/spark.png)
+
+Получились следующие логи:
+
+![Задания все, кроме 3](https://github.com/DimaScientist/Big-Data/blob/main/LabWork1/images/tasks_mapr.png)
+
+![Задание 3](https://github.com/DimaScientist/Big-Data/blob/main/LabWork1/images/task3_mapr.png)
+
+

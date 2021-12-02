@@ -8,21 +8,20 @@ import org.apache.spark.sql.functions.lower
 
 
 object Main {
+  Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
+  Logger.getLogger("org.spark-project").setLevel(Level.WARN)
+  Logger.getLogger("org.apache.parquet").setLevel(Level.WARN)
+
   def main(args: Array[String]): Unit = {
-    Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
-    Logger.getLogger("org.spark-project").setLevel(Level.WARN)
-    Logger.getLogger("org.apache.parquet").setLevel(Level.WARN)
 
-    val appName = "LabWork1"
-    val master = "local[2]"
+    val appName = "LabWork2"
 
-    val config = new SparkConf().setAppName(appName).setMaster(master)
+    val Seq(masterURL, programLanguagesPath, postsPath) = args.toSeq
+
+    val config = new SparkConf().setAppName(appName).setMaster(masterURL)
     val sc = new SparkContext(config)
 
     val spark = SparkSession.builder().appName(appName).config(config).getOrCreate()
-
-
-    val programLanguagesPath = "/media/dmitry/Dima/programming-languages.csv"
 
     var dfProgramLanguages = spark.read.option("header", value = true)
       .csv(programLanguagesPath)
@@ -30,8 +29,6 @@ object Main {
 
     println("Выборка данных о языках программирования: ")
     dfProgramLanguages.show(10)
-
-    val postsPath = "/media/dmitry/Dima/stackoverflow.com-Posts/Posts.xml"
 
     val dfPosts = spark.read.format("com.databricks.spark.xml").option("rowTag", "row").load(postsPath)
     println("Выборка данных о постах: ")

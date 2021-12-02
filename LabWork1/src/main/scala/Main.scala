@@ -3,7 +3,6 @@ package org.example
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 
-import java.io.File
 import java.time.format.DateTimeFormatter
 import org.apache.log4j.{Level, Logger}
 import models._
@@ -123,6 +122,7 @@ object Main {
     println("------------------------------------------------------")
 
     val r_earth = 6371
+    val pi = 3.14159265359
 
    val biggestDistance =  stationsInternal
      .cartesian(stationsInternal)
@@ -130,14 +130,11 @@ object Main {
      .map(row =>
        (
          (row._1.name, row._2.name),
-         2 * r_earth * asin( sqrt( pow(sin((row._1.lat - row._2.lat) / 2),2)
-           + (1 - pow(sin((row._1.lat - row._2.lat) / 2),2)
-           - pow(sin((row._1.lat + row._2.lat) / 2),2) * pow(sin((row._1.long + row._2.long) / 2),2))))
+        sqrt((pow((row._1.lat - row._2.lat), 2 ) + pow((row._1.long - row._2.long), 2)))
        )
      )
      .reduce((first, second) => {if(first._2 > second._2) first else second})
-    println(String.format("Станции " +  biggestDistance._1._1 + " и " + biggestDistance._1._2
-      + " имеют расстояние: " + biggestDistance._2))
+    println(String.format("Станции " +  biggestDistance._1._1 + " и " + biggestDistance._1._2))
     println("------------------------------------------------------")
 
     println("------------------------------------------------------")
