@@ -6,3 +6,6 @@
 **/project
 **/.bsp
 *.jar
+venv
+__pycache__
+.idea
