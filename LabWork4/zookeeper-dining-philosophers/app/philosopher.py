@@ -39,6 +39,7 @@ class Philosopher(Process):
         while i < self.iterations:
 
             logger.info(f"Philosopher {self.id} is thinking")
+            sleep(self.thinking_time)
             with lock:
                 if len(left_fork.contenders()) == 0 \
                         and len(right_fork.contenders()) == 0:
@@ -50,9 +51,6 @@ class Philosopher(Process):
                     sleep(self.eating_time)
                     left_fork.release()
                     right_fork.release()
-
-                sleep(self.thinking_time)
-
             i += 1
 
         logger.info(f"Philosopher {self.id} has gone")
