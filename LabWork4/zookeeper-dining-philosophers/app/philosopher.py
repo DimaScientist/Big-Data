@@ -47,7 +47,7 @@ class Philosopher(Thread):
                     left_fork.acquire()
                     right_fork.acquire()
 
-                if left_fork.is_acquired:
+                if right_fork.is_acquired and left_fork.is_acquired:
                     logger.info(f"Philosopher {self.id} is eating")
                     sleep(self.eating_time)
                     left_fork.release()
