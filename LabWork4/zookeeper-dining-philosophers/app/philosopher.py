@@ -1,11 +1,12 @@
 from multiprocessing import Process
+from threading import Thread
 from time import sleep
 
 from config import ZOOKEEPER_HOST, ZOOKEEPER_PORT, PHILOSOPHERS_NUMBER, logger
 from kazoo.client import KazooClient
 
 
-class Philosopher(Process):
+class Philosopher(Thread):
 
     def __init__(self,
                  root_path: str,
